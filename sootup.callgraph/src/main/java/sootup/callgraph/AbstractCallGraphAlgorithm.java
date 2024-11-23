@@ -93,7 +93,7 @@ public abstract class AbstractCallGraphAlgorithm implements CallGraphAlgorithm {
    *
    * @return the initialized call graph used in the call graph algorithm
    */
-  protected MutableCallGraph initializeCallGraph(
+  public static MutableCallGraph initializeCallGraph(
       List<MethodSignature> entryPoints, List<MethodSignature> clinits) {
     ArrayList<MethodSignature> rootSignatures = new ArrayList<>(entryPoints);
     rootSignatures.addAll(clinits);
