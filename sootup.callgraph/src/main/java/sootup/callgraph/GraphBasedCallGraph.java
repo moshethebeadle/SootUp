@@ -379,4 +379,8 @@ public class GraphBasedCallGraph implements MutableCallGraph {
   public List<MethodSignature> getEntryMethods() {
     return entryMethods;
   }
+
+  public DirectedPseudograph<Vertex, Call> getGraph() {
+    return graph;
+  }
 }
