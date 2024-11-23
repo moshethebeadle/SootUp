@@ -99,7 +99,7 @@ public class ClassHierarchyAnalysisAlgorithm extends AbstractCallGraphAlgorithm 
       ArrayList<ClassType> noImplementedMethod = new ArrayList<>();
       List<MethodSignature> targets =
           resolveAllCallTargets(targetMethodSignature, noImplementedMethod);
-      if (!targetMethod.isAbstract()) {
+      if (!targetMethod.isAbstract() || includeAbstractMethods()) {
         targets.add(targetMethod.getSignature());
       }
       if (invokeExpr instanceof JInterfaceInvokeExpr) {
@@ -119,44 +119,47 @@ public class ClassHierarchyAnalysisAlgorithm extends AbstractCallGraphAlgorithm 
     }
   }
 
+  protected boolean includeAbstractMethods() {
+    return false;
+  }
+
   private List<MethodSignature> resolveAllCallTargets(
       MethodSignature targetMethodSignature, ArrayList<ClassType> noImplementedMethod) {
     ArrayList<MethodSignature> targets = new ArrayList<>();
     view.getTypeHierarchy()
         .subtypesOf(targetMethodSignature.getDeclClassType())
         .forEach(
-            classType -> {
-              SootClass clazz = view.getClass(classType).orElse(null);
-              if (clazz == null) {
-                return;
-              }
-              // check if method is implemented
-              SootMethod method =
-                  clazz.getMethod(targetMethodSignature.getSubSignature()).orElse(null);
-              if (method != null && !method.isAbstract()) {
-                targets.add(method.getSignature());
-              }
-              // save classes with no implementation of the searched method
-              if (method == null && !clazz.isInterface()) {
-                noImplementedMethod.add(classType);
-              }
-              // collect all default methods
-              clazz
-                  .getInterfaces()
-                  .forEach(
-                      interfaceType -> {
-                        SootMethod defaultMethod =
-                            view.getMethod(
-                                    view.getIdentifierFactory()
-                                        .getMethodSignature(
-                                            interfaceType, targetMethodSignature.getSubSignature()))
-                                .orElse(null);
-                        // contains an implemented default method
-                        if (defaultMethod != null && !defaultMethod.isAbstract()) {
-                          targets.add(defaultMethod.getSignature());
-                        }
-                      });
-            });
+        classType -> {
+          SootClass clazz = view.getClass(classType).orElse(null);
+          if (clazz == null) {
+            return;
+          }
+          // check if method is implemented
+          SootMethod method = clazz.getMethod(targetMethodSignature.getSubSignature()).orElse(null);
+          if (method != null && !method.isAbstract()) {
+            targets.add(method.getSignature());
+          }
+          // save classes with no implementation of the searched method
+          if (method == null && !clazz.isInterface()) {
+            noImplementedMethod.add(classType);
+          }
+          // collect all default methods
+          clazz
+              .getInterfaces()
+              .forEach(
+                  interfaceType -> {
+                    SootMethod defaultMethod =
+                        view.getMethod(
+                                view.getIdentifierFactory()
+                                    .getMethodSignature(
+                                        interfaceType, targetMethodSignature.getSubSignature()))
+                            .orElse(null);
+                    // contains an implemented default method
+                    if (defaultMethod != null && !defaultMethod.isAbstract()) {
+                      targets.add(defaultMethod.getSignature());
+                    }
+                  });
+        });
     return targets;
   }
 
