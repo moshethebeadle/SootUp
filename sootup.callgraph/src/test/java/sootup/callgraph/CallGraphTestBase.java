@@ -1044,8 +1044,7 @@ public abstract class CallGraphTestBase<T extends AbstractCallGraphAlgorithm> {
   }
 
   /**
-   * Test uses initialize() method to create call graph, but no main method is present in input java
-   * source files. Expected result is RuntimeException.
+   * Test ensures that call graph contains a library method that doesn't actually exist in our view.
    */
   @Test
   public void testStopAtLibraryClass() {
