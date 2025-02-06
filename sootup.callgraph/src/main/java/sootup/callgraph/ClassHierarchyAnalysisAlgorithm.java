@@ -57,13 +57,13 @@ public class ClassHierarchyAnalysisAlgorithm extends AbstractCallGraphAlgorithm 
   @Nonnull
   @Override
   public CallGraph initialize() {
-    return constructCompleteCallGraph(view, Collections.singletonList(findMainMethod(view)));
+    return constructCompleteCallGraph(Collections.singletonList(findMainMethod()));
   }
 
   @Nonnull
   @Override
   public CallGraph initialize(@Nonnull List<MethodSignature> entryPoints) {
-    return constructCompleteCallGraph(view, entryPoints);
+    return constructCompleteCallGraph(entryPoints);
   }
 
   /**
@@ -165,7 +165,6 @@ public class ClassHierarchyAnalysisAlgorithm extends AbstractCallGraphAlgorithm 
 
   @Override
   protected void postProcessingMethod(
-      View view,
       MethodSignature sourceMethod,
       @Nonnull Deque<MethodSignature> workList,
       @Nonnull MutableCallGraph cg) {
@@ -174,7 +173,6 @@ public class ClassHierarchyAnalysisAlgorithm extends AbstractCallGraphAlgorithm 
 
   @Override
   protected void preProcessingMethod(
-      View view,
       MethodSignature sourceMethod,
       @Nonnull Deque<MethodSignature> workList,
       @Nonnull MutableCallGraph cg) {
