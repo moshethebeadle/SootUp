@@ -25,8 +25,8 @@ public class RelaxedClassHierarchyAnalysisAlgorithmTest
   }
 
   /**
-   * Test that proves that it includes interfaces.
-   * TODO -- all the other tests still don't quite work.
+   * Test that proves that it includes interfaces. TODO -- all the other tests still don't quite
+   * work.
    */
   @Test
   public void testDynamicInterfaceMethod0_modified() {

@@ -26,6 +26,7 @@ import java.util.*;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import sootup.core.IdentifierFactory;
+import sootup.core.jimple.common.constant.MethodHandle;
 import sootup.core.jimple.common.expr.AbstractInvokeExpr;
 import sootup.core.jimple.common.expr.JDynamicInvokeExpr;
 import sootup.core.jimple.common.expr.JInterfaceInvokeExpr;
@@ -86,7 +87,17 @@ public class ClassHierarchyAnalysisAlgorithm extends AbstractCallGraphAlgorithm 
     AbstractInvokeExpr invokeExpr = optInvokeExpr.get();
     MethodSignature targetMethodSignature = invokeExpr.getMethodSignature();
     if ((invokeExpr instanceof JDynamicInvokeExpr)) {
-      return Stream.empty();
+      // Sample instruction:
+      // $stack2 = dynamicinvoke "apply" <java.util.function.Function
+      // (com.overstock.product.service.impl.ProductOptionServiceImpl)>(this)
+      // <java.lang.invoke.LambdaMetafactory: java.lang.invoke.CallSite
+      // metafactory(java.lang.invoke.MethodHandles$Lookup,java.lang.String,java.lang.invoke.MethodType,java.lang.invoke.MethodType,java.lang.invoke.MethodHandle,java.lang.invoke.MethodType)>(methodtype: java.lang.Object __METHODTYPE__(java.lang.Object), methodhandle: "REF_INVOKE_VIRTUAL" <com.overstock.product.service.impl.ProductOptionServiceImpl: java.util.Optional determineStorefrontsByItemId(java.lang.Long)>, methodtype: java.util.Optional __METHODTYPE__(java.lang.Long));
+      return ((JDynamicInvokeExpr) invokeExpr)
+          .getBootstrapArgs().stream()
+              .filter(x -> x instanceof MethodHandle)
+              .map(x -> (MethodHandle) x)
+              .map(MethodHandle::getReferenceSignature)
+              .map(x -> (MethodSignature) x);
     }
 
     SootMethod targetMethod = findConcreteMethod(view, targetMethodSignature).orElse(null);
@@ -129,37 +140,38 @@ public class ClassHierarchyAnalysisAlgorithm extends AbstractCallGraphAlgorithm 
     view.getTypeHierarchy()
         .subtypesOf(targetMethodSignature.getDeclClassType())
         .forEach(
-        classType -> {
-          SootClass clazz = view.getClass(classType).orElse(null);
-          if (clazz == null) {
-            return;
-          }
-          // check if method is implemented
-          SootMethod method = clazz.getMethod(targetMethodSignature.getSubSignature()).orElse(null);
-          if (method != null && !method.isAbstract()) {
-            targets.add(method.getSignature());
-          }
-          // save classes with no implementation of the searched method
-          if (method == null && !clazz.isInterface()) {
-            noImplementedMethod.add(classType);
-          }
-          // collect all default methods
-          clazz
-              .getInterfaces()
-              .forEach(
-                  interfaceType -> {
-                    SootMethod defaultMethod =
-                        view.getMethod(
-                                view.getIdentifierFactory()
-                                    .getMethodSignature(
-                                        interfaceType, targetMethodSignature.getSubSignature()))
-                            .orElse(null);
-                    // contains an implemented default method
-                    if (defaultMethod != null && !defaultMethod.isAbstract()) {
-                      targets.add(defaultMethod.getSignature());
-                    }
-                  });
-        });
+            classType -> {
+              SootClass clazz = view.getClass(classType).orElse(null);
+              if (clazz == null) {
+                return;
+              }
+              // check if method is implemented
+              SootMethod method =
+                  clazz.getMethod(targetMethodSignature.getSubSignature()).orElse(null);
+              if (method != null && !method.isAbstract()) {
+                targets.add(method.getSignature());
+              }
+              // save classes with no implementation of the searched method
+              if (method == null && !clazz.isInterface()) {
+                noImplementedMethod.add(classType);
+              }
+              // collect all default methods
+              clazz
+                  .getInterfaces()
+                  .forEach(
+                      interfaceType -> {
+                        SootMethod defaultMethod =
+                            view.getMethod(
+                                    view.getIdentifierFactory()
+                                        .getMethodSignature(
+                                            interfaceType, targetMethodSignature.getSubSignature()))
+                                .orElse(null);
+                        // contains an implemented default method
+                        if (defaultMethod != null && !defaultMethod.isAbstract()) {
+                          targets.add(defaultMethod.getSignature());
+                        }
+                      });
+            });
     return targets;
   }
 

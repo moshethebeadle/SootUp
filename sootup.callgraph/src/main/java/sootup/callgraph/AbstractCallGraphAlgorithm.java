@@ -112,6 +112,7 @@ public abstract class AbstractCallGraphAlgorithm implements CallGraphAlgorithm {
                 getSignatureOfImplementedStaticInitializer(methodSignature.getDeclClassType()))
         .filter(Optional::isPresent)
         .map(Optional::get)
+        .distinct()
         .collect(Collectors.toList());
   }
 
