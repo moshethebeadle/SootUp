@@ -43,16 +43,33 @@ public class GraphBasedCallGraph implements MutableCallGraph {
    * This internal class is used to describe a vertex in the graph. The vertex is defined by a
    * method signature that describes the method.
    */
-  protected static class Vertex {
+  public static class Vertex {
     @Nonnull final MethodSignature methodSignature;
 
-    protected Vertex(@Nonnull MethodSignature methodSignature) {
+    public Vertex(@Nonnull MethodSignature methodSignature) {
       this.methodSignature = methodSignature;
     }
 
     @Nonnull
-    protected MethodSignature getMethodSignature() {
+    public MethodSignature getMethodSignature() {
       return methodSignature;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (o == null || getClass() != o.getClass()) return false;
+      Vertex vertex = (Vertex) o;
+      return Objects.equals(methodSignature, vertex.methodSignature);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hashCode(methodSignature);
+    }
+
+    @Override
+    public String toString() {
+      return "Vertex{" + "methodSignature=" + methodSignature + '}';
     }
   }
 
